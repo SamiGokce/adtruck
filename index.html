@@ -1,0 +1,1958 @@
+<meta charset="UTF-8">
+<title>siinit — Programmatic OOH at Scale</title>
+<style>
+@font-face{font-family:'Google Sans';src:url('fonts/GoogleSans-Regular.ttf') format('truetype');font-weight:400;font-style:normal;font-display:swap}
+@font-face{font-family:'Google Sans';src:url('fonts/GoogleSans-Medium.ttf') format('truetype');font-weight:500;font-style:normal;font-display:swap}
+@font-face{font-family:'Google Sans';src:url('fonts/GoogleSans-SemiBold.ttf') format('truetype');font-weight:600;font-style:normal;font-display:swap}
+@font-face{font-family:'Google Sans';src:url('fonts/GoogleSans-Bold.ttf') format('truetype');font-weight:700;font-style:normal;font-display:swap}
+:root {
+  --blue: #264D90;
+  --blue-hover: #1E3D73;
+  --blue-light: rgba(38, 77, 144, 0.08);
+  --green: #49B473;
+  --red: #E91E5D;
+  --yellow: #F8B231;
+  --bg: #FAFAFA;
+  --bg-alt: #FAFAFA;
+  --ink-1: #202124;
+  --ink-2: #5F6368;
+  --ink-3: #80868B;
+  --border: #DADCE0;
+  --card-shadow: 0 1px 3px rgba(60,64,67,0.12), 0 1px 2px rgba(60,64,67,0.08);
+  --card-shadow-hover: 0 4px 16px rgba(60,64,67,0.16), 0 2px 4px rgba(60,64,67,0.08);
+  --truck-body: #FFFFFF;
+  --truck-stroke: #DADCE0;
+  --display-bg: #202124;
+  --display-text: #E8EAED;
+  --chart-area: rgba(38,77,144,0.10);
+  --chart-grid: #E8EAED;
+  --glow-color: rgba(38,77,144,0.25);
+  --nav-bg: rgba(250,250,250,0.92);
+  --nav-border: #DADCE0;
+  --stat-bg: #F1F3F4;
+  --map-road: #E8EAED;
+  --map-water: #C5D5ED;
+  --map-bg: #F1F3F4;
+  --cta-bg: #543C92;
+  --cta-bg-hover: #443080;
+  --radius: 16px;
+  --max-w: 1200px;
+}
+:root[data-theme="dark"]{
+  --blue: #7EAEE6;
+  --blue-hover: #99C3F0;
+  --blue-light: rgba(126,174,230,0.12);
+  --green: #6DD19A;
+  --bg: #1F1F1F;
+  --bg-alt: #2D2D2D;
+  --ink-1: #E8EAED;
+  --ink-2: #9AA0A6;
+  --ink-3: #80868B;
+  --border: #3C4043;
+  --card-shadow: 0 1px 3px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+  --card-shadow-hover: 0 4px 16px rgba(0,0,0,0.5), 0 2px 4px rgba(0,0,0,0.25);
+  --truck-body: #303134;
+  --truck-stroke: #5F6368;
+  --display-bg: #0D0D0D;
+  --display-text: #E8EAED;
+  --chart-area: rgba(126,174,230,0.12);
+  --chart-grid: #3C4043;
+  --glow-color: rgba(126,174,230,0.2);
+  --nav-bg: rgba(31,31,31,0.92);
+  --nav-border: #3C4043;
+  --stat-bg: #3C4043;
+  --map-road: #5F6368;
+  --map-water: #394457;
+  --map-bg: #2D2D2D;
+  --cta-bg: #6B52B5;
+  --cta-bg-hover: #5C45A0;
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+.page{
+  background:var(--bg);
+  color:var(--ink-1);
+  font-family:'Google Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;
+  line-height:1.6;
+  -webkit-font-smoothing:antialiased;
+  overflow-x:hidden;
+}
+
+/* ── Navbar ── */
+.nav{
+  position:fixed;top:0;left:0;right:0;z-index:100;
+  height:64px;
+  background:var(--nav-bg);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid transparent;
+  transition:border-color .3s;
+}
+.nav.scrolled{border-bottom-color:var(--nav-border)}
+.nav-inner{
+  max-width:var(--max-w);margin:0 auto;height:100%;
+  padding:0 32px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.nav-brand{display:flex;align-items:center;gap:12px;text-decoration:none;color:var(--ink-1)}
+.nav-brand svg{flex-shrink:0}
+.nav-links{display:flex;align-items:center;gap:32px;list-style:none}
+.nav-links a{text-decoration:none;color:#00396E;font-size:15px;font-weight:500;transition:color .2s}
+.nav-links a:hover{color:#002a52}
+.nav-cta{
+  display:inline-flex;align-items:center;padding:10px 24px;
+  background:#F9B233;color:#000;font-size:14px;font-weight:600;
+  border-radius:50px;text-decoration:none;transition:background .2s;white-space:nowrap;
+}
+.nav-cta:hover{background:#e5a22e}
+.nav-brand span{
+  font-size:18px;font-weight:500;color:var(--ink-1);
+  letter-spacing:-0.01em;
+}
+.btn-pill{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 24px;
+  background:var(--blue);color:#FFFFFF;
+  border:none;border-radius:100px;
+  font-size:14px;font-weight:500;
+  letter-spacing:0.01em;
+  cursor:pointer;
+  transition:background .2s,box-shadow .2s;
+  text-decoration:none;
+}
+.btn-pill:hover{background:var(--blue-hover);box-shadow:0 1px 3px rgba(0,0,0,0.2)}
+.btn-pill:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.btn-pill-pink{background:#E91E5D}
+.btn-pill-pink:hover{background:#D01A53}
+.btn-pill-pink:focus-visible{outline-color:#E91E5D}
+.btn-pill-outline{
+  background:transparent;color:var(--blue);
+  border:1.5px solid var(--border);
+}
+.btn-pill-outline:hover{background:var(--blue-light);border-color:var(--blue)}
+.btn-pill-outline-purple{
+  background:transparent;color:#543C92;
+  border:1.5px solid rgba(84,60,146,0.35);
+}
+.btn-pill-outline-purple:hover{background:rgba(84,60,146,0.08);border-color:#543C92}
+
+/* ── Hero ── */
+.hero{
+  padding:100px 32px 24px;
+  max-width:var(--max-w);margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr 1.2fr;
+  gap:40px;
+  align-items:center;
+}
+.hero-cta-center{
+  grid-column:1 / -1;
+  display:flex;justify-content:center;
+  margin-top:-8px;
+}
+.hero h1{
+  font-size:clamp(32px,4.5vw,56px);
+  font-weight:600;
+  line-height:1.15;
+  letter-spacing:-0.025em;
+  color:var(--ink-1);
+  text-wrap:balance;
+  margin-bottom:20px;
+}
+.hero h1 em{
+  font-style:normal;
+  color:#543C92;
+}
+.hero-sub{
+  font-size:18px;line-height:1.65;
+  color:var(--ink-2);
+  max-width:440px;
+  margin-bottom:36px;
+}
+.hero-ctas{display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+
+/* ── Date picker ── */
+/* ── Book button ── */
+.date-picker-wrap{position:relative}
+.date-trigger{
+  display:inline-flex;align-items:center;gap:12px;
+  padding:20px 48px;
+  background:#F9B233;
+  color:#000;
+  border:none;border-radius:100px;
+  font-size:20px;font-weight:700;letter-spacing:0.02em;
+  cursor:pointer;
+  transition:transform .2s,box-shadow .2s;
+  box-shadow:0 4px 24px rgba(249,178,51,0.4),0 2px 8px rgba(249,178,51,0.2);
+  animation:cta-pulse 2.5s ease-in-out infinite;
+}
+@keyframes cta-pulse{
+  0%,100%{box-shadow:0 4px 24px rgba(249,178,51,0.4),0 2px 8px rgba(249,178,51,0.2)}
+  50%{box-shadow:0 6px 36px rgba(249,178,51,0.55),0 3px 14px rgba(249,178,51,0.35)}
+}
+.date-trigger:hover{
+  transform:translateY(-2px) scale(1.03);
+  background:#E5A02E;
+  box-shadow:0 8px 40px rgba(249,178,51,0.55),0 4px 16px rgba(249,178,51,0.3);
+  animation:none;
+}
+.date-trigger svg{flex-shrink:0;width:24px;height:24px}
+
+/* ── Booking Modal ── */
+.booking-overlay{
+  display:none;position:fixed;inset:0;z-index:1000;
+  background:rgba(0,0,0,0.5);backdrop-filter:blur(4px);
+  justify-content:center;align-items:center;padding:20px;
+  font-family:'Google Sans',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+}
+.booking-overlay.open{display:flex}
+.booking-modal{
+  background:var(--bg);border-radius:20px;
+  width:100%;max-width:520px;max-height:90vh;overflow-y:auto;
+  box-shadow:0 24px 80px rgba(0,0,0,0.2);
+  position:relative;
+}
+.booking-close{
+  position:absolute;top:16px;right:16px;
+  width:36px;height:36px;border-radius:50%;border:none;
+  background:none;cursor:pointer;font-size:20px;
+  color:var(--ink-2);display:flex;align-items:center;justify-content:center;
+  transition:background .15s;z-index:2;
+}
+.booking-close:hover{background:rgba(0,0,0,0.06)}
+.booking-steps{padding:32px 32px 24px}
+.booking-step{display:none}
+.booking-step.active{display:block}
+.booking-step-title{font-size:22px;font-weight:700;color:var(--ink-1);margin-bottom:4px}
+.booking-step-sub{font-size:14px;color:var(--ink-2);margin-bottom:24px}
+.booking-progress{
+  display:flex;gap:6px;padding:0 32px;margin-bottom:8px;
+}
+.booking-progress-dot{
+  flex:1;height:4px;border-radius:2px;background:var(--border);
+  transition:background .3s;
+}
+.booking-progress-dot.done{background:#E91E5D}
+.booking-progress-dot.current{background:#F9B233}
+
+/* Calendar in modal */
+.bcal-header{
+  display:flex;align-items:center;justify-content:space-between;
+  margin-bottom:16px;
+}
+.bcal-header span{font-size:16px;font-weight:600;color:var(--ink-1)}
+.bcal-nav{
+  background:none;border:none;cursor:pointer;
+  width:32px;height:32px;border-radius:50%;
+  display:flex;align-items:center;justify-content:center;
+  color:var(--ink-2);transition:background .15s;
+}
+.bcal-nav:hover{background:rgba(0,0,0,0.05)}
+.bcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center}
+.bcal-grid .bcal-label{
+  font-size:11px;font-weight:600;color:var(--ink-3);
+  padding:6px 0;text-transform:uppercase;letter-spacing:.04em;
+}
+.bcal-grid .bcal-day{
+  width:100%;aspect-ratio:1;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--ink-1);cursor:pointer;
+  border:none;background:none;transition:all .15s;
+  font-weight:500;
+}
+.bcal-grid .bcal-day:hover:not(.past):not(.booked){background:rgba(249,178,51,0.15)}
+.bcal-grid .bcal-day.today{font-weight:700;color:#E91E5D}
+.bcal-grid .bcal-day.selected{background:#E91E5D;color:#FFF;font-weight:700}
+.bcal-grid .bcal-day.past{color:var(--ink-3);opacity:.3;cursor:default}
+.bcal-grid .bcal-day.booked{
+  color:var(--ink-3);opacity:.35;cursor:not-allowed;
+  text-decoration:line-through;
+}
+.bcal-grid .bcal-day.half-booked{
+  background:rgba(233,30,93,0.08);color:var(--ink-1);cursor:pointer;
+}
+.bcal-grid .bcal-day.other{color:var(--ink-3);opacity:.25;cursor:default}
+.selected-dates-list{
+  margin-top:20px;display:flex;flex-wrap:wrap;gap:8px;
+}
+.selected-date-chip{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:100px;
+  background:rgba(233,30,93,0.1);color:#E91E5D;
+  font-size:13px;font-weight:600;
+}
+.selected-date-chip button{
+  background:none;border:none;cursor:pointer;
+  color:#E91E5D;font-size:16px;line-height:1;padding:0;
+}
+
+/* Time slot picker */
+.time-slots{display:flex;flex-direction:column;gap:10px}
+.time-slot-date{font-size:14px;font-weight:700;color:var(--ink-1);margin-top:12px;margin-bottom:4px}
+.time-slot-options{display:flex;gap:8px;flex-wrap:wrap}
+.time-slot-btn{
+  flex:1;min-width:120px;padding:14px 16px;
+  border:2px solid var(--border);border-radius:14px;
+  background:none;cursor:pointer;text-align:center;
+  transition:all .2s;
+}
+.time-slot-btn:hover:not(:disabled){border-color:#F9B233;background:rgba(249,178,51,0.06)}
+.time-slot-btn.active{border-color:#E91E5D;background:rgba(233,30,93,0.06)}
+.time-slot-btn:disabled{opacity:.3;cursor:not-allowed}
+.time-slot-btn .slot-label{font-size:14px;font-weight:600;color:var(--ink-1)}
+.time-slot-btn .slot-time{font-size:12px;color:var(--ink-2);margin-top:2px}
+
+/* Contact form */
+.booking-form{display:flex;flex-direction:column;gap:14px}
+.booking-field label{
+  display:block;font-size:13px;font-weight:600;
+  color:var(--ink-2);margin-bottom:6px;
+}
+.booking-field input{
+  width:100%;padding:12px 16px;
+  border:1.5px solid var(--border);border-radius:12px;
+  background:var(--bg);color:var(--ink-1);
+  font-size:15px;outline:none;
+  transition:border-color .2s;
+  box-sizing:border-box;
+}
+.booking-field input:focus{border-color:#E91E5D}
+.booking-field input::placeholder{color:var(--ink-3)}
+
+/* Action buttons */
+.booking-actions{
+  display:flex;gap:10px;margin-top:20px;
+  padding:0 32px 28px;
+}
+.booking-btn{
+  flex:1;padding:14px;border:none;border-radius:100px;
+  font-size:15px;font-weight:600;cursor:pointer;
+  transition:all .2s;
+}
+.booking-btn-primary{background:#E91E5D;color:#FFF}
+.booking-btn-primary:hover{background:#D01A53}
+.booking-btn-primary:disabled{opacity:.4;cursor:default}
+.booking-btn-secondary{background:none;color:var(--ink-2);border:1.5px solid var(--border)}
+.booking-btn-secondary:hover{background:rgba(0,0,0,0.03)}
+
+/* Confirmation */
+.booking-confirm-icon{
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(73,180,115,0.12);color:#49B473;
+  display:flex;align-items:center;justify-content:center;
+  font-size:32px;margin:0 auto 16px;
+}
+.booking-summary{
+  background:rgba(0,0,0,0.03);border-radius:14px;
+  padding:16px 20px;margin-top:16px;
+}
+.booking-summary-row{
+  display:flex;justify-content:space-between;
+  padding:6px 0;font-size:14px;
+}
+.booking-summary-row span:first-child{color:var(--ink-2)}
+.booking-summary-row span:last-child{font-weight:600;color:var(--ink-1)}
+.hero-visual{position:relative;display:flex;justify-content:center;align-items:center}
+
+/* ── Truck image ── */
+.truck-wrap{position:relative;width:100%;max-width:560px}
+.truck-wrap img{width:100%;height:auto;display:block;border-radius:16px}
+.truck-wrap::before{
+  content:'';position:absolute;
+  top:-20%;left:-22%;right:-22%;bottom:-20%;
+  background:radial-gradient(ellipse at 55% 50%,rgba(233,30,93,0.18) 0%,rgba(233,30,93,0.10) 25%,rgba(233,30,93,0.05) 45%,rgba(233,30,93,0.02) 60%,transparent 80%);
+  border-radius:50%;z-index:0;pointer-events:none;
+}
+.truck-wrap img{position:relative;z-index:1}
+
+/* ── Features ── */
+.features-section{
+  padding:56px 32px 64px;
+  background:var(--bg-alt);
+}
+.features-header{
+  max-width:var(--max-w);margin:0 auto 32px;
+  text-align:center;
+}
+.features-header h2{
+  font-size:clamp(24px,3vw,36px);font-weight:600;
+  letter-spacing:-0.02em;color:var(--ink-1);
+  margin-bottom:12px;text-wrap:balance;
+}
+.features-header p{
+  font-size:17px;color:var(--ink-2);max-width:540px;margin:0 auto;
+}
+.features-grid{
+  max-width:var(--max-w);margin:0 auto;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:24px;
+}
+.feature-card{
+  background:var(--bg);
+  border-radius:var(--radius);
+  box-shadow:var(--card-shadow);
+  overflow:hidden;
+  transition:box-shadow .3s,transform .3s;
+}
+.feature-card:hover{box-shadow:var(--card-shadow-hover);transform:translateY(-2px)}
+.feature-card-body{padding:32px}
+.feature-label{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:12px;font-weight:600;color:var(--blue);
+  letter-spacing:0.06em;text-transform:uppercase;
+  margin-bottom:12px;
+}
+.feature-card-body h3{
+  font-size:22px;font-weight:600;color:var(--ink-1);
+  letter-spacing:-0.01em;margin-bottom:8px;
+}
+.feature-card-body p{font-size:15px;color:var(--ink-2);line-height:1.6;margin-bottom:0}
+
+/* ── Map component ── */
+.map-container{
+  height:280px;
+  background:var(--map-bg);
+  position:relative;
+  overflow:hidden;
+}
+.map-container svg{width:100%;height:100%}
+
+/* ── Dashboard component ── */
+.dash-container{padding:0 32px 24px}
+.stat-row{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:12px;
+  margin-bottom:20px;
+}
+.stat-box{
+  background:var(--stat-bg);
+  border-radius:12px;
+  padding:16px;
+}
+.stat-label{font-size:12px;color:var(--ink-3);font-weight:500;margin-bottom:4px}
+.stat-value{
+  font-size:22px;font-weight:600;color:var(--ink-1);
+  line-height:1.2;
+}
+.stat-delta{
+  display:inline-flex;align-items:center;gap:3px;
+  font-size:12px;font-weight:500;margin-top:4px;
+}
+.stat-delta.up{color:var(--green)}
+.stat-delta.down{color:var(--red)}
+.chart-container{position:relative;padding:0 0 8px}
+.chart-container svg{width:100%;height:auto;display:block}
+
+/* ── Chart tooltip ── */
+.chart-tooltip{
+  position:absolute;
+  pointer-events:none;
+  background:var(--ink-1);
+  color:var(--bg);
+  padding:6px 12px;
+  border-radius:8px;
+  font-size:13px;font-weight:500;
+  white-space:nowrap;
+  opacity:0;
+  transition:opacity .15s;
+  transform:translate(-50%,-100%);
+  margin-top:-12px;
+  z-index:10;
+}
+.chart-tooltip.visible{opacity:1}
+.chart-crosshair{
+  stroke:var(--ink-3);stroke-width:1;
+  stroke-dasharray:4 3;
+  opacity:0;transition:opacity .15s;
+}
+.chart-crosshair.visible{opacity:1}
+.chart-hover-dot{
+  fill:var(--blue);stroke:var(--bg);stroke-width:2.5;
+  r:5;opacity:0;transition:opacity .15s;
+}
+.chart-hover-dot.visible{opacity:1}
+
+/* ── CTA Banner ── */
+.cta-section{
+  padding:64px 32px;
+  background:var(--bg);
+}
+.cta-inner{
+  max-width:var(--max-w);margin:0 auto;
+  background:var(--cta-bg);
+  border-radius:var(--radius);
+  padding:56px 48px;
+  display:flex;align-items:center;justify-content:space-between;
+  gap:32px;
+}
+.cta-inner h2{
+  font-size:clamp(22px,2.8vw,30px);font-weight:600;
+  color:#FFFFFF;letter-spacing:-0.015em;
+  text-wrap:balance;
+}
+.cta-inner p{font-size:16px;color:rgba(255,255,255,0.8);margin-top:8px}
+.btn-white{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:14px 32px;
+  background:#FFFFFF;color:var(--cta-bg);
+  border:none;border-radius:100px;
+  font-size:15px;font-weight:600;
+  cursor:pointer;
+  transition:box-shadow .2s,transform .2s;
+  text-decoration:none;
+  flex-shrink:0;
+}
+.btn-white:hover{box-shadow:0 4px 12px rgba(0,0,0,0.2);transform:translateY(-1px)}
+.btn-white:focus-visible{outline:2px solid #FFFFFF;outline-offset:2px}
+
+/* ── Route dots animation ── */
+@keyframes route-dot{
+  0%{offset-distance:0%}
+  100%{offset-distance:100%}
+}
+.route-dot{
+  fill:var(--blue);
+  offset-rotate:0deg;
+  animation:route-dot 4s linear infinite;
+}
+.route-dot:nth-child(2){animation-delay:-1.3s}
+.route-dot:nth-child(3){animation-delay:-2.6s}
+
+/* ── How it Works ── */
+.hiw{padding:80px 32px;max-width:var(--max-w);margin:0 auto}
+.hiw-header{text-align:center;margin-bottom:64px}
+.hiw-header h2{font-size:36px;font-weight:700;color:var(--ink-1);margin-bottom:8px}
+.hiw-header p{font-size:16px;color:var(--ink-2);max-width:480px;margin:0 auto}
+.hiw-steps{display:flex;flex-direction:column;gap:0;position:relative}
+.hiw-steps::before{
+  content:'';position:absolute;left:39px;top:40px;bottom:40px;width:2px;
+  background:linear-gradient(to bottom,#49B473,#F9B233,#E91E5D,#00396E);
+  border-radius:2px;
+}
+.hiw-step{
+  display:grid;grid-template-columns:80px 1fr;gap:32px;align-items:start;
+  padding:32px 0;position:relative;
+  opacity:0;transform:translateY(40px);
+  transition:opacity .7s ease,transform .7s ease;
+}
+.hiw-step.visible{opacity:1;transform:translateY(0)}
+.hiw-step:nth-child(1){transition-delay:0s}
+.hiw-step:nth-child(2){transition-delay:.15s}
+.hiw-step:nth-child(3){transition-delay:.3s}
+.hiw-step:nth-child(4){transition-delay:.45s}
+.hiw-num{
+  width:80px;height:80px;border-radius:20px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:28px;font-weight:700;color:#fff;
+  position:relative;z-index:1;
+  flex-shrink:0;
+}
+.hiw-step:nth-child(1) .hiw-num{background:#49B473}
+.hiw-step:nth-child(2) .hiw-num{background:#F9B233}
+.hiw-step:nth-child(3) .hiw-num{background:#E91E5D}
+.hiw-step:nth-child(4) .hiw-num{background:#00396E}
+.hiw-content{padding-top:8px}
+.hiw-content h3{font-size:22px;font-weight:700;color:var(--ink-1);margin-bottom:8px}
+.hiw-content p{font-size:15px;color:var(--ink-2);line-height:1.6;max-width:520px}
+.hiw-visual{
+  margin-top:16px;padding:20px 24px;
+  background:var(--bg-alt);border:1px solid var(--border);border-radius:16px;
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  max-width:520px;
+}
+.hiw-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:8px 16px;border-radius:50px;font-size:13px;font-weight:500;
+  background:#fff;border:1px solid var(--border);color:var(--ink-1);
+  animation:hiwFloat 3s ease-in-out infinite;
+}
+.hiw-pill:nth-child(2){animation-delay:.5s}
+.hiw-pill:nth-child(3){animation-delay:1s}
+.hiw-pill:nth-child(4){animation-delay:1.5s}
+@keyframes hiwFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+.hiw-bar{
+  height:8px;border-radius:4px;background:var(--border);flex:1;min-width:80px;
+  position:relative;overflow:hidden;
+}
+.hiw-bar-fill{
+  height:100%;border-radius:4px;width:0;
+  transition:width 1.5s ease;
+}
+.hiw-step.visible .hiw-bar-fill{width:var(--fill)}
+.hiw-bar-fill.green{background:#49B473}
+.hiw-bar-fill.yellow{background:#F9B233}
+.hiw-bar-fill.pink{background:#E91E5D}
+.hiw-bar-fill.navy{background:#00396E}
+.hiw-icon-row{display:flex;gap:8px;margin-top:12px}
+.hiw-icon-box{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid var(--border);background:#fff;
+  transition:transform .3s,box-shadow .3s;
+}
+.hiw-step.visible .hiw-icon-box{animation:hiwPop .5s ease forwards}
+.hiw-icon-box:nth-child(1){animation-delay:.6s}
+.hiw-icon-box:nth-child(2){animation-delay:.75s}
+.hiw-icon-box:nth-child(3){animation-delay:.9s}
+@keyframes hiwPop{0%{transform:scale(0.5);opacity:0}100%{transform:scale(1);opacity:1}}
+.hiw-dots{display:flex;gap:6px;align-items:center}
+.hiw-dot{
+  width:10px;height:10px;border-radius:50%;
+  opacity:0;transform:scale(0);
+  transition:all .4s ease;
+}
+.hiw-step.visible .hiw-dot{opacity:1;transform:scale(1)}
+.hiw-dot:nth-child(1){background:#49B473;transition-delay:.5s}
+.hiw-dot:nth-child(2){background:#F9B233;transition-delay:.65s}
+.hiw-dot:nth-child(3){background:#E91E5D;transition-delay:.8s}
+.hiw-dot:nth-child(4){background:#00396E;transition-delay:.95s}
+.hiw-dot:nth-child(5){background:#49B473;transition-delay:1.1s}
+.hiw-pulse{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:10px 18px;border-radius:12px;
+  background:rgba(233,30,93,0.08);color:#E91E5D;
+  font-size:13px;font-weight:600;
+}
+.hiw-pulse-dot{
+  width:8px;height:8px;border-radius:50%;background:#E91E5D;
+  animation:hiwPulseDot 1.5s ease-in-out infinite;
+}
+@keyframes hiwPulseDot{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(1.4)}}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .hero{grid-template-columns:1fr;gap:32px;padding-top:90px}
+  .hero-visual{order:-1}
+  .features-grid{grid-template-columns:1fr}
+  .cta-inner{flex-direction:column;text-align:center;padding:40px 32px}
+  .nav-links{display:none}
+  .nav-cta{display:none}
+  .nav-inner{justify-content:center}
+  .hiw-step{grid-template-columns:60px 1fr;gap:20px}
+  .hiw-num{width:60px;height:60px;font-size:22px;border-radius:16px}
+  .hiw-steps::before{left:29px}
+  .svc-grid{grid-template-columns:1fr}
+  .cs-stats{grid-template-columns:repeat(2,1fr)}
+  .cs-cards{grid-template-columns:1fr}
+  .cs-compare-row{grid-template-columns:100px 1fr 50px}
+}
+@media(max-width:600px){
+  .nav-inner{padding:0 20px}
+  .hero,.features-section,.cta-section,.cs{padding-left:20px;padding-right:20px}
+  .cs-stats{grid-template-columns:1fr 1fr}
+  .cs-stat-num{font-size:32px}
+  .cs-compare{padding:24px 20px}
+  .cs-compare-row{grid-template-columns:90px 1fr 45px;gap:10px}
+  .cs-compare-label{font-size:12px}
+  .feature-card-body{padding:24px}
+  .stat-row{grid-template-columns:1fr;gap:8px}
+  .dash-container{padding:0 24px 20px}
+  .hero h1{font-size:28px}
+}
+
+/* ── Theme toggle ── */
+.theme-toggle{
+  display:flex;align-items:center;justify-content:center;gap:8px;
+  margin:0 auto;
+  padding:12px 28px;
+  background:var(--bg-alt);
+  border:1px solid var(--border);
+  border-radius:100px;
+  font-size:14px;font-weight:500;
+  color:var(--ink-2);
+  cursor:pointer;
+  transition:background .2s,border-color .2s;
+}
+.theme-toggle:hover{background:var(--blue-light);border-color:var(--blue)}
+.theme-toggle svg{flex-shrink:0}
+.footer-bar{
+  padding:32px 32px 48px;
+  display:flex;justify-content:center;
+  background:var(--bg);
+}
+
+/* ── Services ── */
+.svc{padding:80px 32px;max-width:var(--max-w);margin:0 auto}
+.svc-header{text-align:center;margin-bottom:56px}
+.svc-header h2{font-size:36px;font-weight:700;color:var(--ink-1);margin-bottom:8px}
+.svc-header p{font-size:16px;color:var(--ink-2);max-width:520px;margin:0 auto}
+.svc-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:24px}
+.svc-card{
+  background:var(--bg-alt);border:1px solid var(--border);border-radius:20px;
+  padding:36px 32px;position:relative;overflow:hidden;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .6s ease,transform .6s ease,box-shadow .3s;
+}
+.svc-card.visible{opacity:1;transform:translateY(0)}
+.svc-card:nth-child(1){transition-delay:0s}
+.svc-card:nth-child(2){transition-delay:.12s}
+.svc-card:nth-child(3){transition-delay:.24s}
+.svc-card:nth-child(4){transition-delay:.36s}
+.svc-card:hover{box-shadow:var(--card-shadow-hover)}
+.svc-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:3px;
+}
+.svc-card:nth-child(1)::before{background:linear-gradient(90deg,#49B473,#6DD19A)}
+.svc-card:nth-child(2)::before{background:linear-gradient(90deg,#264D90,#7EAEE6)}
+.svc-card:nth-child(3)::before{background:linear-gradient(90deg,#F9B233,#FBCF6A)}
+.svc-card:nth-child(4)::before{background:linear-gradient(90deg,#E91E5D,#F06292)}
+.svc-icon{
+  width:52px;height:52px;border-radius:14px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:20px;
+}
+.svc-card:nth-child(1) .svc-icon{background:rgba(73,180,115,0.1)}
+.svc-card:nth-child(2) .svc-icon{background:rgba(38,77,144,0.1)}
+.svc-card:nth-child(3) .svc-icon{background:rgba(249,178,51,0.1)}
+.svc-card:nth-child(4) .svc-icon{background:rgba(233,30,93,0.1)}
+.svc-card h3{font-size:20px;font-weight:700;color:var(--ink-1);margin-bottom:10px}
+.svc-soon{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:4px 10px;border-radius:50px;
+  background:rgba(95,99,104,0.1);color:var(--ink-2);
+  border:1px solid var(--border);
+  font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;
+  vertical-align:middle;margin-left:8px;
+}
+.svc-card>p{font-size:14px;color:var(--ink-2);line-height:1.65;margin-bottom:20px}
+.svc-details{display:flex;flex-direction:column;gap:10px}
+.svc-detail{
+  display:flex;align-items:center;gap:10px;
+  font-size:13px;font-weight:500;color:var(--ink-1);
+}
+.svc-detail-check{
+  width:20px;height:20px;border-radius:6px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+}
+.svc-card:nth-child(1) .svc-detail-check{background:rgba(73,180,115,0.12);color:#49B473}
+.svc-card:nth-child(2) .svc-detail-check{background:rgba(38,77,144,0.12);color:#264D90}
+.svc-card:nth-child(3) .svc-detail-check{background:rgba(249,178,51,0.12);color:#F9B233}
+.svc-card:nth-child(4) .svc-detail-check{background:rgba(233,30,93,0.12);color:#E91E5D}
+
+/* ── Case Studies ── */
+.cs{padding:80px 32px;max-width:var(--max-w);margin:0 auto}
+.cs-header{text-align:center;margin-bottom:56px}
+.cs-header h2{font-size:36px;font-weight:700;color:var(--ink-1);margin-bottom:8px}
+.cs-header p{font-size:16px;color:var(--ink-2);max-width:520px;margin:0 auto}
+
+/* Stat counters row */
+.cs-stats{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:20px;
+  margin-bottom:64px;
+}
+.cs-stat{
+  text-align:center;padding:28px 16px;
+  background:var(--bg-alt);border:1px solid var(--border);border-radius:16px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .6s ease,transform .6s ease,box-shadow .3s;
+}
+.cs-stat.visible{opacity:1;transform:translateY(0)}
+.cs-stat:nth-child(1){transition-delay:0s}
+.cs-stat:nth-child(2){transition-delay:.12s}
+.cs-stat:nth-child(3){transition-delay:.24s}
+.cs-stat:nth-child(4){transition-delay:.36s}
+.cs-stat:hover{box-shadow:var(--card-shadow-hover)}
+.cs-stat-num{
+  font-size:42px;font-weight:700;line-height:1.1;
+  margin-bottom:6px;
+  background:linear-gradient(135deg,#49B473,#00396E);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+}
+.cs-stat:nth-child(2) .cs-stat-num{background:linear-gradient(135deg,#F9B233,#E91E5D);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.cs-stat:nth-child(3) .cs-stat-num{background:linear-gradient(135deg,#E91E5D,#543C92);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.cs-stat:nth-child(4) .cs-stat-num{background:linear-gradient(135deg,#00396E,#49B473);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.cs-stat-label{font-size:13px;font-weight:500;color:var(--ink-2);line-height:1.4}
+.cs-stat-source{font-size:11px;color:var(--ink-3);margin-top:4px}
+
+/* Case study cards */
+.cs-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:24px;margin-bottom:64px}
+.cs-card{
+  background:var(--bg-alt);border:1px solid var(--border);border-radius:20px;
+  overflow:hidden;
+  opacity:0;transform:translateY(40px);
+  transition:opacity .7s ease,transform .7s ease,box-shadow .3s;
+}
+.cs-card.visible{opacity:1;transform:translateY(0)}
+.cs-card:nth-child(1){transition-delay:0s}
+.cs-card:nth-child(2){transition-delay:.15s}
+.cs-card:nth-child(3){transition-delay:.3s}
+.cs-card:hover{box-shadow:var(--card-shadow-hover)}
+.cs-card-top{
+  padding:32px 28px 24px;position:relative;overflow:hidden;
+}
+.cs-card-top::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:4px;
+}
+.cs-card:nth-child(1) .cs-card-top::before{background:linear-gradient(90deg,#49B473,#00396E)}
+.cs-card:nth-child(2) .cs-card-top::before{background:linear-gradient(90deg,#F9B233,#E91E5D)}
+.cs-card:nth-child(3) .cs-card-top::before{background:linear-gradient(90deg,#E91E5D,#543C92)}
+.cs-card-icon{
+  width:48px;height:48px;border-radius:12px;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:16px;
+}
+.cs-card:nth-child(1) .cs-card-icon{background:rgba(73,180,115,0.12)}
+.cs-card:nth-child(2) .cs-card-icon{background:rgba(249,178,51,0.12)}
+.cs-card:nth-child(3) .cs-card-icon{background:rgba(233,30,93,0.12)}
+.cs-card-category{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1.2px;color:var(--ink-3);margin-bottom:8px}
+.cs-card h3{font-size:20px;font-weight:700;color:var(--ink-1);margin-bottom:8px;line-height:1.3}
+.cs-card-desc{font-size:14px;color:var(--ink-2);line-height:1.6;margin-bottom:20px}
+.cs-card-results{
+  padding:20px 28px 28px;
+  border-top:1px solid var(--border);
+}
+.cs-card-results-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:1px;color:var(--ink-3);margin-bottom:14px}
+.cs-result-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.cs-result-row:last-child{margin-bottom:0}
+.cs-result-bar-wrap{flex:1;height:8px;background:var(--border);border-radius:8px;overflow:hidden}
+.cs-result-bar{height:100%;border-radius:8px;width:0;transition:width 1.2s cubic-bezier(.22,1,.36,1)}
+.cs-card.visible .cs-result-bar{width:var(--bar)}
+.cs-result-bar.green{background:linear-gradient(90deg,#49B473,#6DD19A)}
+.cs-result-bar.yellow{background:linear-gradient(90deg,#F9B233,#FBCF6A)}
+.cs-result-bar.pink{background:linear-gradient(90deg,#E91E5D,#F06292)}
+.cs-result-bar.navy{background:linear-gradient(90deg,#00396E,#264D90)}
+.cs-result-label{font-size:12px;font-weight:500;color:var(--ink-2);min-width:80px}
+.cs-result-val{font-size:14px;font-weight:700;min-width:50px;text-align:right}
+.cs-card:nth-child(1) .cs-result-val{color:#49B473}
+.cs-card:nth-child(2) .cs-result-val{color:#F9B233}
+.cs-card:nth-child(3) .cs-result-val{color:#E91E5D}
+
+/* Comparison section */
+.cs-compare{
+  background:var(--bg-alt);border:1px solid var(--border);border-radius:20px;
+  padding:40px 40px 36px;
+  opacity:0;transform:translateY(30px);
+  transition:opacity .7s ease,transform .7s ease;
+}
+.cs-compare.visible{opacity:1;transform:translateY(0)}
+.cs-compare-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:32px;flex-wrap:wrap;gap:12px}
+.cs-compare h3{font-size:20px;font-weight:700;color:var(--ink-1)}
+.cs-compare-badge{
+  display:inline-flex;align-items:center;gap:6px;
+  padding:6px 14px;border-radius:50px;
+  background:rgba(73,180,115,0.1);color:#49B473;
+  font-size:12px;font-weight:600;
+}
+.cs-compare-badge span{animation:hiwPulseDot 2s ease-in-out infinite}
+.cs-compare-rows{display:flex;flex-direction:column;gap:16px}
+.cs-compare-row{display:grid;grid-template-columns:140px 1fr 60px;gap:16px;align-items:center}
+.cs-compare-label{font-size:14px;font-weight:500;color:var(--ink-1)}
+.cs-compare-bar-wrap{height:32px;background:var(--border);border-radius:8px;overflow:hidden;position:relative}
+.cs-compare-bar{
+  height:100%;border-radius:8px;width:0;
+  transition:width 1.4s cubic-bezier(.22,1,.36,1);
+  display:flex;align-items:center;padding-left:12px;
+  font-size:12px;font-weight:600;color:#fff;
+}
+.cs-compare.visible .cs-compare-bar{width:var(--bar)}
+.cs-compare-val{font-size:15px;font-weight:700;color:var(--ink-1);text-align:right}
+.cs-compare-source{text-align:center;margin-top:20px;font-size:11px;color:var(--ink-3)}
+
+/* ── Reduced motion ── */
+@media(prefers-reduced-motion:reduce){
+  .route-dot{animation:none}
+  .feature-card{transition:none}
+  .btn-pill,.btn-white{transition:none}
+  .svc-card{transition:none;opacity:1;transform:none}
+  .cs-stat,.cs-card,.cs-compare{transition:none;opacity:1;transform:none}
+  .cs-result-bar,.cs-compare-bar{transition:none}
+}
+</style>
+
+<div class="page">
+
+<!-- ── Navbar ── -->
+<nav class="nav" id="nav">
+  <div class="nav-inner">
+    <a class="nav-brand" href="#">
+      <svg width="38" height="42" viewBox="200 140 1100 1220" fill="none">
+        <circle cx="470.7" cy="411.1" r="261.1" fill="#49b473"/>
+        <circle cx="1029.3" cy="411.1" r="261.1" fill="#e91e5d"/>
+        <path d="M252,989 A219,219 0 0,1 690,989 V1350 H252 Z" fill="#00396e"/>
+        <path d="M810,989 A219,219 0 0,1 1248,989 V1350 H810 Z" fill="#f9b233"/>
+      </svg>
+    </a>
+    <div class="nav-links">
+      <a href="#caseStudies">Case Studies</a>
+      <a href="#services">Services</a>
+      <a href="#howItWorks">How it Works</a>
+      <a href="#">Contact</a>
+    </div>
+    <a class="nav-cta" href="#">View Interactive Map</a>
+  </div>
+</nav>
+
+<!-- ── Hero ── -->
+<section class="hero">
+  <div class="hero-text">
+    <h1>OOH, <em>look at that!</em></h1>
+    <p class="hero-sub">Reach audiences in the physical world with the same precision you expect from digital. AI-optimized routes, real-time measurement, and a powerful ad platform — on the street.</p>
+    <div class="hero-ctas">
+      <div class="date-picker-wrap">
+        <button class="date-trigger" id="openBooking" type="button">
+          <svg width="24" height="24" viewBox="0 0 16 16" fill="none"><rect x="2" y="3" width="12" height="11" rx="2" stroke="currentColor" stroke-width="1.5"/><line x1="2" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.5"/><line x1="5" y1="1" x2="5" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><line x1="11" y1="1" x2="11" y2="4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          Book Your Campaign
+        </button>
+      </div>
+      <a class="btn-pill btn-pill-outline-purple" href="#">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><polygon points="6,3 13,8 6,13" fill="currentColor"/></svg>
+        Watch demo
+      </a>
+    </div>
+  </div>
+  <div class="hero-visual">
+    <div class="truck-wrap">
+      <img src="siint-6.svg?v=2" alt="LED advertising truck with bright pink display" style="width:100%;height:auto;border-radius:16px">
+
+        <!-- Cab body -->
+        <rect x="16" y="104" width="124" height="152" rx="8" fill="url(#cabGrad)" stroke="#1A3A6E" stroke-width="1"/>
+        <rect x="16" y="104" width="124" height="2.5" rx="1" fill="#5A8DC5" opacity=".5"/>
+
+        <!-- Windshield -->
+        <path d="M26 112 h58 a6 6 0 0 1 6 6 v56 a4 4 0 0 1-4 4 H26 Z" fill="url(#windGrad)"/>
+        <path d="M28 114 L68 114 L40 172 L28 172 Z" fill="#FFF" opacity=".2"/>
+        <line x1="56" y1="112" x2="56" y2="178" stroke="#1A3A6E" stroke-width=".8" opacity=".4"/>
+
+        <!-- Door panel -->
+        <rect x="26" y="184" width="62" height="66" rx="3" fill="none" stroke="#1A3A6E" stroke-width=".7" opacity=".4"/>
+        <rect x="76" y="212" width="10" height="4" rx="2" fill="url(#chromeGrad)"/>
+        <!-- Passenger panel -->
+        <rect x="94" y="112" width="42" height="138" rx="3" fill="none" stroke="#1A3A6E" stroke-width=".6" opacity=".3"/>
+        <rect x="98" y="116" width="34" height="58" rx="4" fill="url(#windGrad)" opacity=".65"/>
+
+        <!-- Side mirror -->
+        <rect x="8" y="136" width="14" height="10" rx="3" fill="url(#chromeGrad)" stroke="#999" stroke-width=".5"/>
+        <rect x="4" y="138" width="6" height="6" rx="2" fill="#A8D8EA" opacity=".7"/>
+
+        <!-- Grille -->
+        <rect x="16" y="196" width="22" height="26" rx="3" fill="#1A3A6E"/>
+        <line x1="21" y1="200" x2="21" y2="218" stroke="#3A6DB5" stroke-width="2"/>
+        <line x1="27" y1="200" x2="27" y2="218" stroke="#3A6DB5" stroke-width="2"/>
+        <line x1="33" y1="200" x2="33" y2="218" stroke="#3A6DB5" stroke-width="2"/>
+
+        <!-- Headlights -->
+        <rect x="16" y="226" width="20" height="8" rx="3" fill="#F8B231"/>
+        <rect x="16" y="226" width="20" height="4" rx="2" fill="#FFE566" opacity=".7"/>
+        <rect x="0" y="227" width="16" height="6" rx="3" fill="url(#headlightGlow)"/>
+        <rect x="16" y="238" width="14" height="4" rx="2" fill="#F8B231" opacity=".4"/>
+
+        <!-- Step -->
+        <rect x="24" y="252" width="52" height="4" rx="1" fill="url(#chromeGrad)"/>
+
+        <!-- Front bumper -->
+        <rect x="12" y="244" width="132" height="10" rx="4" fill="url(#chromeGrad)" stroke="#A0A0A0" stroke-width=".5"/>
+        <rect x="14" y="245" width="128" height="3" rx="1.5" fill="#F0F0F0" opacity=".5"/>
+
+        <!-- Mud flaps -->
+        <rect x="372" y="256" width="4" height="14" rx="1" fill="#333"/>
+        <rect x="432" y="256" width="4" height="14" rx="1" fill="#333"/>
+
+        <!-- Front wheel -->
+        <circle cx="86" cy="272" r="26" fill="url(#tireGrad)"/>
+        <circle cx="86" cy="272" r="17" fill="url(#hubGrad)"/>
+        <circle cx="86" cy="259" r="2" fill="#999"/><circle cx="86" cy="285" r="2" fill="#999"/>
+        <circle cx="73" cy="272" r="2" fill="#999"/><circle cx="99" cy="272" r="2" fill="#999"/>
+        <circle cx="77" cy="263" r="1.5" fill="#999"/><circle cx="95" cy="263" r="1.5" fill="#999"/>
+        <circle cx="77" cy="281" r="1.5" fill="#999"/><circle cx="95" cy="281" r="1.5" fill="#999"/>
+        <circle cx="86" cy="272" r="5" fill="#DDD"/>
+        <circle cx="86" cy="272" r="3" fill="#999"/>
+
+        <!-- Rear wheels (double) -->
+        <circle cx="410" cy="272" r="24" fill="url(#tireGrad)" opacity=".35"/>
+        <circle cx="400" cy="272" r="26" fill="url(#tireGrad)"/>
+        <circle cx="400" cy="272" r="17" fill="url(#hubGrad)"/>
+        <circle cx="400" cy="259" r="2" fill="#999"/><circle cx="400" cy="285" r="2" fill="#999"/>
+        <circle cx="387" cy="272" r="2" fill="#999"/><circle cx="413" cy="272" r="2" fill="#999"/>
+        <circle cx="391" cy="263" r="1.5" fill="#999"/><circle cx="409" cy="263" r="1.5" fill="#999"/>
+        <circle cx="391" cy="281" r="1.5" fill="#999"/><circle cx="409" cy="281" r="1.5" fill="#999"/>
+        <circle cx="400" cy="272" r="5" fill="#DDD"/>
+        <circle cx="400" cy="272" r="3" fill="#999"/>
+
+        <!-- Exhaust -->
+        <rect x="42" y="254" width="14" height="3" rx="1.5" fill="#888"/>
+        <ellipse cx="42" cy="255.5" rx="1.5" ry="1.5" fill="#555"/>
+      </svg>
+    </div>
+  </div>
+</section>
+
+<!-- ── Case Studies ── -->
+<section class="cs" id="caseStudies">
+  <div class="cs-header">
+    <h2>The numbers speak for themselves</h2>
+    <p>Real data from real campaigns. Mobile billboards don't just get seen — they move the needle.</p>
+  </div>
+
+  <!-- Stat counters -->
+  <div class="cs-stats">
+    <div class="cs-stat">
+      <div class="cs-stat-num" data-count="97" data-suffix="%">0%</div>
+      <div class="cs-stat-label">Ad recall rate</div>
+      <div class="cs-stat-source">Product Acceptance & Research</div>
+    </div>
+    <div class="cs-stat">
+      <div class="cs-stat-num" data-count="497" data-suffix="%" data-prefix="">0%</div>
+      <div class="cs-stat-label">Average return on investment</div>
+      <div class="cs-stat-source">OAAA Industry Report</div>
+    </div>
+    <div class="cs-stat">
+      <div class="cs-stat-num" data-count="2.5" data-suffix="x" data-decimal="1">0x</div>
+      <div class="cs-stat-label">More attention than static billboards</div>
+      <div class="cs-stat-source">Perception Research Services</div>
+    </div>
+    <div class="cs-stat">
+      <div class="cs-stat-num" data-count="4" data-suffix="x">0x</div>
+      <div class="cs-stat-label">More online activations per $ than TV</div>
+      <div class="cs-stat-source">Nielsen OOH Study</div>
+    </div>
+  </div>
+
+  <!-- Case study cards -->
+  <div class="cs-cards">
+
+    <div class="cs-card">
+      <div class="cs-card-top">
+        <div class="cs-card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#49B473" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+        </div>
+        <div class="cs-card-category">DTC Beauty</div>
+        <h3>Topicals sold out at Sephora in 24 hours</h3>
+        <div class="cs-card-desc">Skincare brand Topicals deployed truck-side mobile billboards across NYC boroughs, targeting high-traffic neighborhoods during peak commute hours — on a budget under $10K.</div>
+      </div>
+      <div class="cs-card-results">
+        <div class="cs-card-results-title">Campaign results</div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Web traffic</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar green" style="--bar:94%"></div></div>
+          <span class="cs-result-val">+194%</span>
+        </div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Conversions</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar green" style="--bar:78%"></div></div>
+          <span class="cs-result-val">+100%</span>
+        </div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Sell-through</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar green" style="--bar:100%"></div></div>
+          <span class="cs-result-val">24 hrs</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cs-card">
+      <div class="cs-card-top">
+        <div class="cs-card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F9B233" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        </div>
+        <div class="cs-card-category">Tourism</div>
+        <h3>Explore Georgia reached 56M impressions</h3>
+        <div class="cs-card-desc">Georgia's tourism board placed 10 trucks across Atlanta suburbs for 14 weeks, promoting in-state travel destinations with rotating creative on LED displays.</div>
+      </div>
+      <div class="cs-card-results">
+        <div class="cs-card-results-title">Campaign results</div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Impressions</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar yellow" style="--bar:92%"></div></div>
+          <span class="cs-result-val">56M</span>
+        </div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Per truck/wk</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar yellow" style="--bar:65%"></div></div>
+          <span class="cs-result-val">400K</span>
+        </div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Duration</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar yellow" style="--bar:85%"></div></div>
+          <span class="cs-result-val">14 wks</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="cs-card">
+      <div class="cs-card-top">
+        <div class="cs-card-icon">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#E91E5D" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/></svg>
+        </div>
+        <div class="cs-card-category">Non-Profit</div>
+        <h3>ALS Association drove 62M impressions nationwide</h3>
+        <div class="cs-card-desc">18 LED trucks deployed across multiple U.S. cities for a 9-week awareness campaign, later expanding to 2 additional markets due to strong early performance.</div>
+      </div>
+      <div class="cs-card-results">
+        <div class="cs-card-results-title">Campaign results</div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Impressions</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar pink" style="--bar:96%"></div></div>
+          <span class="cs-result-val">62M</span>
+        </div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Trucks</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar pink" style="--bar:60%"></div></div>
+          <span class="cs-result-val">18</span>
+        </div>
+        <div class="cs-result-row">
+          <span class="cs-result-label">Expansion</span>
+          <div class="cs-result-bar-wrap"><div class="cs-result-bar pink" style="--bar:72%"></div></div>
+          <span class="cs-result-val">+2 cities</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Recall comparison -->
+  <div class="cs-compare">
+    <div class="cs-compare-header">
+      <h3>Ad recall by format</h3>
+      <div class="cs-compare-badge"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#49B473"></span> Mobile billboard leads every format</div>
+    </div>
+    <div class="cs-compare-rows">
+      <div class="cs-compare-row">
+        <span class="cs-compare-label">Mobile billboard</span>
+        <div class="cs-compare-bar-wrap"><div class="cs-compare-bar" style="--bar:97%;background:linear-gradient(90deg,#49B473,#00396E)">97%</div></div>
+        <span class="cs-compare-val">97%</span>
+      </div>
+      <div class="cs-compare-row">
+        <span class="cs-compare-label">Static billboard</span>
+        <div class="cs-compare-bar-wrap"><div class="cs-compare-bar" style="--bar:71%;background:linear-gradient(90deg,#F9B233,#E8A020)">71%</div></div>
+        <span class="cs-compare-val">71%</span>
+      </div>
+      <div class="cs-compare-row">
+        <span class="cs-compare-label">TV streaming</span>
+        <div class="cs-compare-bar-wrap"><div class="cs-compare-bar" style="--bar:62%;background:linear-gradient(90deg,#E91E5D,#C41850)">62%</div></div>
+        <span class="cs-compare-val">62%</span>
+      </div>
+      <div class="cs-compare-row">
+        <span class="cs-compare-label">Online display</span>
+        <div class="cs-compare-bar-wrap"><div class="cs-compare-bar" style="--bar:38%;background:linear-gradient(90deg,#9AA0A6,#80868B)">38%</div></div>
+        <span class="cs-compare-val">38%</span>
+      </div>
+      <div class="cs-compare-row">
+        <span class="cs-compare-label">Phone ads</span>
+        <div class="cs-compare-bar-wrap"><div class="cs-compare-bar" style="--bar:12%;background:linear-gradient(90deg,#DADCE0,#B0B5BA)"></div></div>
+        <span class="cs-compare-val">12%</span>
+      </div>
+    </div>
+    <div class="cs-compare-source">Sources: OAAA, Product Acceptance & Research, Nielsen, Solomon Partners</div>
+  </div>
+</section>
+
+<!-- ── Services ── -->
+<section class="svc" id="services">
+  <div class="svc-header">
+    <h2>What we offer</h2>
+    <p>Everything you need to run high-impact outdoor campaigns — from screens on the street to stats on your screen.</p>
+  </div>
+  <div class="svc-grid">
+
+    <div class="svc-card">
+      <div class="svc-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#49B473" stroke-width="2"><rect x="1" y="3" width="15" height="13" rx="2"/><path d="M16 8h4a2 2 0 012 2v9a1 1 0 01-1 1h-3"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/><path d="M8 18h8"/></svg>
+      </div>
+      <h3>LED Truck Campaigns</h3>
+      <p>High-resolution LED screens mounted on trucks that drive through your target neighborhoods. Your ad, on the move, impossible to miss.</p>
+      <div class="svc-details">
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Full-day, half-day, or custom time slots</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Pick neighborhoods, routes, and hours</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Swap creatives mid-campaign instantly</div>
+      </div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#264D90" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+      </div>
+      <h3>AI Route Planning<span class="svc-soon">Coming soon</span></h3>
+      <p>Our algorithms optimize truck routes in real time — analyzing foot traffic density, demographics, events, and weather to maximize every impression.</p>
+      <div class="svc-details">
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Real-time traffic and crowd data</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Event and weather-aware scheduling</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Auto-reroutes to highest-traffic zones</div>
+      </div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#F9B233" stroke-width="2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/><line x1="2" y1="20" x2="22" y2="20"/></svg>
+      </div>
+      <h3>Real-Time Analytics</h3>
+      <p>A live dashboard that shows you impressions, dwell time, crowd density, and GPS location of every truck — no waiting, no guesswork.</p>
+      <div class="svc-details">
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Live GPS truck tracking</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Impressions, engagement, and attribution</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Post-campaign performance reports</div>
+      </div>
+    </div>
+
+    <div class="svc-card">
+      <div class="svc-icon">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#E91E5D" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg>
+      </div>
+      <h3>Creative Services</h3>
+      <p>Our design team produces LED-optimized visuals — high-contrast images and static ads built for maximum impact at street level. Swap creatives anytime.</p>
+      <div class="svc-details">
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>LED-optimized high-contrast designs</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>Unlimited mid-campaign creative swaps</div>
+        <div class="svc-detail"><span class="svc-detail-check"><svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6l2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></span>A/B test different creatives by zone</div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── How it Works ── -->
+<section class="hiw" id="howItWorks">
+  <div class="hiw-header">
+    <h2>How it works</h2>
+    <p>Four steps from idea to impressions on the street.</p>
+  </div>
+  <div class="hiw-steps">
+
+    <div class="hiw-step">
+      <div class="hiw-num">1</div>
+      <div class="hiw-content">
+        <h3>Pick your zones</h3>
+        <p>Choose the neighborhoods, routes, and hours you want your ad rolling through. Our AI suggests the highest-traffic windows automatically.</p>
+        <div class="hiw-visual">
+          <span class="hiw-pill">Downtown</span>
+          <span class="hiw-pill">University</span>
+          <span class="hiw-pill">Mall District</span>
+          <span class="hiw-pill">Nightlife</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="hiw-step">
+      <div class="hiw-num">2</div>
+      <div class="hiw-content">
+        <h3>Upload your creative</h3>
+        <p>Drop in your image or video. It goes straight to a high-res LED screen — no printing, no wait. Swap creatives mid-campaign anytime.</p>
+        <div class="hiw-icon-row">
+          <div class="hiw-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#E91E5D" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="3"/><circle cx="8.5" cy="8.5" r="1.5"/><path d="m21 15-5-5L5 21"/></svg></div>
+          <div class="hiw-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#F9B233" stroke-width="2"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2"/></svg></div>
+          <div class="hiw-icon-box"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#49B473" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hiw-step">
+      <div class="hiw-num">3</div>
+      <div class="hiw-content">
+        <h3>Launch your campaign</h3>
+        <p>Confirm your dates and budget — our trucks hit the road. Real-time GPS tracking shows exactly where your ad is, right now.</p>
+        <div class="hiw-visual" style="gap:16px">
+          <div class="hiw-pulse"><span class="hiw-pulse-dot"></span> Truck #1 — Live on King St</div>
+          <div class="hiw-dots">
+            <span class="hiw-dot"></span><span class="hiw-dot"></span><span class="hiw-dot"></span><span class="hiw-dot"></span><span class="hiw-dot"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="hiw-step">
+      <div class="hiw-num">4</div>
+      <div class="hiw-content">
+        <h3>Measure everything</h3>
+        <p>See impressions, dwell time, and crowd density in a live dashboard. Know exactly what you got — no guesswork, no estimates.</p>
+        <div class="hiw-visual" style="flex-direction:column;gap:10px">
+          <div style="display:flex;align-items:center;gap:12px;width:100%"><span style="font-size:13px;font-weight:600;color:var(--ink-2);min-width:80px">Impressions</span><div class="hiw-bar"><div class="hiw-bar-fill green" style="--fill:85%"></div></div><span style="font-size:13px;font-weight:700;color:#49B473">42K</span></div>
+          <div style="display:flex;align-items:center;gap:12px;width:100%"><span style="font-size:13px;font-weight:600;color:var(--ink-2);min-width:80px">Dwell time</span><div class="hiw-bar"><div class="hiw-bar-fill yellow" style="--fill:62%"></div></div><span style="font-size:13px;font-weight:700;color:#F9B233">8.2s</span></div>
+          <div style="display:flex;align-items:center;gap:12px;width:100%"><span style="font-size:13px;font-weight:600;color:var(--ink-2);min-width:80px">Peak crowd</span><div class="hiw-bar"><div class="hiw-bar-fill pink" style="--fill:74%"></div></div><span style="font-size:13px;font-weight:700;color:#E91E5D">5:30 PM</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── Features ── -->
+<section class="features-section">
+  <div class="features-header">
+    <h2>Intelligence meets the street</h2>
+    <p>Two capabilities that make siinit different from every other OOH platform.</p>
+  </div>
+  <div class="features-grid">
+
+    <!-- Card 1: AI Routes -->
+    <div class="feature-card">
+      <div class="map-container">
+        <svg viewBox="0 0 600 280" preserveAspectRatio="xMidYMid slice">
+          <!-- Map background -->
+          <rect width="600" height="280" fill="var(--map-bg)"/>
+          <!-- Water body -->
+          <path d="M0 200 Q100 160 200 180 Q300 200 400 170 Q500 140 600 160 V280 H0 Z" fill="var(--map-water)" opacity=".4"/>
+          <!-- Roads grid -->
+          <line x1="0" y1="70" x2="600" y2="70" stroke="var(--map-road)" stroke-width="3"/>
+          <line x1="0" y1="140" x2="600" y2="140" stroke="var(--map-road)" stroke-width="4"/>
+          <line x1="0" y1="200" x2="400" y2="200" stroke="var(--map-road)" stroke-width="2"/>
+          <line x1="100" y1="0" x2="100" y2="280" stroke="var(--map-road)" stroke-width="2"/>
+          <line x1="250" y1="0" x2="250" y2="280" stroke="var(--map-road)" stroke-width="3"/>
+          <line x1="400" y1="0" x2="400" y2="280" stroke="var(--map-road)" stroke-width="2"/>
+          <line x1="520" y1="0" x2="520" y2="200" stroke="var(--map-road)" stroke-width="2"/>
+          <!-- Diagonal road -->
+          <line x1="100" y1="70" x2="250" y2="140" stroke="var(--map-road)" stroke-width="3"/>
+          <line x1="400" y1="70" x2="520" y2="140" stroke="var(--map-road)" stroke-width="2"/>
+          <!-- Route path -->
+          <path id="routePath" d="M80 70 L100 70 L100 140 L250 140 L250 70 L400 70 L400 140 L520 140" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" opacity=".85"/>
+          <!-- Animated route dots -->
+          <circle class="route-dot" r="5" opacity=".9">
+            <animateMotion dur="4s" repeatCount="indefinite">
+              <mpath href="#routePath"/>
+            </animateMotion>
+          </circle>
+          <circle class="route-dot" r="4" opacity=".7">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-1.3s">
+              <mpath href="#routePath"/>
+            </animateMotion>
+          </circle>
+          <circle class="route-dot" r="3" opacity=".5">
+            <animateMotion dur="4s" repeatCount="indefinite" begin="-2.6s">
+              <mpath href="#routePath"/>
+            </animateMotion>
+          </circle>
+          <!-- Route markers -->
+          <circle cx="80" cy="70" r="8" fill="var(--green)"/>
+          <circle cx="80" cy="70" r="3" fill="#FFFFFF"/>
+          <circle cx="250" cy="140" r="6" fill="var(--blue)" opacity=".6"/>
+          <circle cx="250" cy="140" r="2.5" fill="#FFFFFF"/>
+          <circle cx="520" cy="140" r="8" fill="var(--red)"/>
+          <circle cx="520" cy="140" r="3" fill="#FFFFFF"/>
+          <!-- Route info badge -->
+          <rect x="280" y="95" width="120" height="32" rx="16" fill="var(--bg)" filter="url(#mapShadow)"/>
+          <text x="305" y="116" fill="var(--ink-1)" font-size="13" font-weight="600" font-family="Google Sans,-apple-system,sans-serif">20 km · 38m</text>
+          <defs>
+            <filter id="mapShadow" x="-20%" y="-20%" width="140%" height="160%">
+              <feDropShadow dx="0" dy="1" stdDeviation="3" flood-opacity=".12"/>
+            </filter>
+          </defs>
+        </svg>
+      </div>
+      <div class="feature-card-body">
+        <div class="feature-label" style="color:#49B473">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1l1.76 3.57L13 5.28l-3 2.92.71 4.12L7 10.27 3.29 12.32 4 8.2 1 5.28l4.24-.71z" fill="currentColor"/></svg>
+          AI-Powered
+        </div>
+        <h3>AI-Powered Routes<span class="svc-soon">Coming soon</span></h3>
+        <p>Machine learning optimizes truck routes in real time based on foot traffic density, demographics, event schedules, and time-of-day patterns — so your message is always where the audience is.</p>
+      </div>
+    </div>
+
+    <!-- Card 2: Dashboard -->
+    <div class="feature-card">
+      <div class="feature-card-body" style="padding-bottom:16px">
+        <div class="feature-label" style="color:#E91E5D">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><rect x="1" y="6" width="3" height="7" rx="1" fill="currentColor"/><rect x="5.5" y="3" width="3" height="10" rx="1" fill="currentColor"/><rect x="10" y="1" width="3" height="12" rx="1" fill="currentColor"/></svg>
+          Live Data
+        </div>
+        <h3>Real-Time Measurement Dashboard</h3>
+        <p>Track impressions, engagement, and attribution as campaigns run — not weeks after they end.</p>
+      </div>
+      <div class="dash-container">
+        <div class="stat-row">
+          <div class="stat-box">
+            <div class="stat-label">Impressions</div>
+            <div class="stat-value">1.2M</div>
+            <div class="stat-delta up">
+              <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="5,1 9,7 1,7" fill="currentColor"/></svg>
+              18.3%
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Engagement</div>
+            <div class="stat-value">4.8%</div>
+            <div class="stat-delta up">
+              <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="5,1 9,7 1,7" fill="currentColor"/></svg>
+              2.1%
+            </div>
+          </div>
+          <div class="stat-box">
+            <div class="stat-label">Viewability</div>
+            <div class="stat-value">89%</div>
+            <div class="stat-delta up">
+              <svg width="10" height="10" viewBox="0 0 10 10"><polygon points="5,1 9,7 1,7" fill="currentColor"/></svg>
+              5.4%
+            </div>
+          </div>
+        </div>
+        <div class="chart-container" id="chartContainer">
+          <svg id="chart" viewBox="0 0 460 200" preserveAspectRatio="xMidYMid meet">
+            <defs>
+              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--blue)" stop-opacity=".15"/>
+                <stop offset="100%" stop-color="var(--blue)" stop-opacity=".01"/>
+              </linearGradient>
+            </defs>
+            <!-- Gridlines -->
+            <line x1="40" y1="20" x2="440" y2="20" stroke="var(--chart-grid)" stroke-width="1"/>
+            <line x1="40" y1="60" x2="440" y2="60" stroke="var(--chart-grid)" stroke-width="1"/>
+            <line x1="40" y1="100" x2="440" y2="100" stroke="var(--chart-grid)" stroke-width="1"/>
+            <line x1="40" y1="140" x2="440" y2="140" stroke="var(--chart-grid)" stroke-width="1"/>
+            <!-- Baseline -->
+            <line x1="40" y1="180" x2="440" y2="180" stroke="var(--border)" stroke-width="1.5"/>
+            <!-- Y-axis labels -->
+            <text x="32" y="24" fill="var(--ink-3)" font-size="11" text-anchor="end" font-family="Google Sans,-apple-system,sans-serif" style="font-variant-numeric:tabular-nums">40K</text>
+            <text x="32" y="64" fill="var(--ink-3)" font-size="11" text-anchor="end" font-family="Google Sans,-apple-system,sans-serif" style="font-variant-numeric:tabular-nums">30K</text>
+            <text x="32" y="104" fill="var(--ink-3)" font-size="11" text-anchor="end" font-family="Google Sans,-apple-system,sans-serif" style="font-variant-numeric:tabular-nums">20K</text>
+            <text x="32" y="144" fill="var(--ink-3)" font-size="11" text-anchor="end" font-family="Google Sans,-apple-system,sans-serif" style="font-variant-numeric:tabular-nums">10K</text>
+            <text x="32" y="184" fill="var(--ink-3)" font-size="11" text-anchor="end" font-family="Google Sans,-apple-system,sans-serif" style="font-variant-numeric:tabular-nums">0</text>
+            <!-- X-axis labels -->
+            <text x="60" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W1</text>
+            <text x="117" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W2</text>
+            <text x="174" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W3</text>
+            <text x="231" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W4</text>
+            <text x="288" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W5</text>
+            <text x="345" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W6</text>
+            <text x="402" y="196" fill="var(--ink-3)" font-size="11" text-anchor="middle" font-family="Google Sans,-apple-system,sans-serif">W7</text>
+            <!-- Area fill -->
+            <polygon points="60,132 117,108 174,120 231,84 288,68 345,48 402,20 402,180 60,180" fill="url(#areaGrad)"/>
+            <!-- Line -->
+            <polyline points="60,132 117,108 174,120 231,84 288,68 345,48 402,20" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- End marker with surface ring -->
+            <circle cx="402" cy="20" r="5" fill="var(--bg)" stroke="none"/>
+            <circle cx="402" cy="20" r="4" fill="var(--blue)"/>
+            <!-- End label -->
+            <text x="420" y="24" fill="var(--ink-2)" font-size="12" font-weight="600" font-family="Google Sans,-apple-system,sans-serif">42K</text>
+            <!-- Crosshair (JS-driven) -->
+            <line class="chart-crosshair" id="crosshair" x1="0" y1="20" x2="0" y2="180"/>
+            <!-- Hover dot (JS-driven) -->
+            <circle class="chart-hover-dot" id="hoverDot" cx="0" cy="0"/>
+            <!-- Invisible hit areas -->
+            <rect class="chart-hit" data-idx="0" x="40" y="0" width="57" height="200" fill="transparent"/>
+            <rect class="chart-hit" data-idx="1" x="97" y="0" width="57" height="200" fill="transparent"/>
+            <rect class="chart-hit" data-idx="2" x="154" y="0" width="57" height="200" fill="transparent"/>
+            <rect class="chart-hit" data-idx="3" x="211" y="0" width="57" height="200" fill="transparent"/>
+            <rect class="chart-hit" data-idx="4" x="268" y="0" width="57" height="200" fill="transparent"/>
+            <rect class="chart-hit" data-idx="5" x="325" y="0" width="57" height="200" fill="transparent"/>
+            <rect class="chart-hit" data-idx="6" x="382" y="0" width="58" height="200" fill="transparent"/>
+          </svg>
+          <div class="chart-tooltip" id="chartTooltip"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ── CTA ── -->
+<section class="cta-section">
+  <div class="cta-inner">
+    <div>
+      <h2>Ready to put your brand on the map?</h2>
+      <p>Talk to our team about launching your first campaign.</p>
+    </div>
+    <a class="btn-white" href="#">
+      Get a quote
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M6 3l5 5-5 5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- ── Theme toggle ── -->
+<div class="footer-bar">
+  <button class="theme-toggle" id="themeToggle" type="button">
+    <svg id="themeIcon" width="18" height="18" viewBox="0 0 18 18" fill="none">
+      <path id="sunIcon" d="M9 13a4 4 0 1 0 0-8 4 4 0 0 0 0 8zm0-10V1m0 16v-2m7 0L14.6 13.6M3.4 4.4L2 3m13 0l-1.4 1.4M3.4 13.6L2 15M17 9h-2M3 9H1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+      <path id="moonIcon" d="M15.2 11.8A6.5 6.5 0 0 1 6.2 2.8 7 7 0 1 0 15.2 11.8z" fill="currentColor" style="display:none"/>
+    </svg>
+    <span id="themeLabel">Dark mode</span>
+  </button>
+</div>
+
+</div>
+
+<!-- ── Booking Modal ── -->
+<div class="booking-overlay" id="bookingOverlay">
+  <div class="booking-modal">
+    <button class="booking-close" id="bookingClose" type="button">&times;</button>
+    <div class="booking-progress">
+      <div class="booking-progress-dot current" data-step="0"></div>
+      <div class="booking-progress-dot" data-step="1"></div>
+      <div class="booking-progress-dot" data-step="2"></div>
+      <div class="booking-progress-dot" data-step="3"></div>
+    </div>
+    <div class="booking-steps">
+
+      <!-- Step 1: Pick dates -->
+      <div class="booking-step active" data-step="0">
+        <div class="booking-step-title">Pick your dates</div>
+        <div class="booking-step-sub">Select one or more days for your campaign</div>
+        <div class="bcal-header">
+          <button class="bcal-nav" id="bcalPrev" type="button"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M9 3L5 7l4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+          <span id="bcalMonth"></span>
+          <button class="bcal-nav" id="bcalNext" type="button"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M5 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        </div>
+        <div class="bcal-grid" id="bcalGrid"></div>
+        <div class="selected-dates-list" id="selectedDatesList"></div>
+      </div>
+
+      <!-- Step 2: Pick time slots -->
+      <div class="booking-step" data-step="1">
+        <div class="booking-step-title">Choose your hours</div>
+        <div class="booking-step-sub">Full day, half day, or mix and match</div>
+        <div class="time-slots" id="timeSlots"></div>
+      </div>
+
+      <!-- Step 3: Contact info -->
+      <div class="booking-step" data-step="2">
+        <div class="booking-step-title">Your details</div>
+        <div class="booking-step-sub">We'll confirm your booking within 24 hours</div>
+        <div class="booking-form">
+          <div class="booking-field">
+            <label>Full name</label>
+            <input type="text" id="bookName" placeholder="John Smith" required>
+          </div>
+          <div class="booking-field">
+            <label>Email</label>
+            <input type="email" id="bookEmail" placeholder="john@company.com" required>
+          </div>
+          <div class="booking-field">
+            <label>Phone (optional)</label>
+            <input type="tel" id="bookPhone" placeholder="+1 (555) 000-0000">
+          </div>
+        </div>
+      </div>
+
+      <!-- Step 4: Confirmation -->
+      <div class="booking-step" data-step="3">
+        <div class="booking-confirm-icon">&#10003;</div>
+        <div class="booking-step-title" style="text-align:center">Booking submitted!</div>
+        <div class="booking-step-sub" style="text-align:center">We'll reach out within 24 hours to confirm your campaign dates.</div>
+        <div class="booking-summary" id="bookingSummary"></div>
+      </div>
+
+    </div>
+    <div class="booking-actions" id="bookingActions">
+      <button class="booking-btn booking-btn-secondary" id="bookBack" type="button">Back</button>
+      <button class="booking-btn booking-btn-primary" id="bookNext" type="button" disabled>Continue</button>
+    </div>
+  </div>
+</div>
+
+<script>
+if (!window.location.hash) window.scrollTo(0, 0);
+(function(){
+  // Navbar scroll
+  const nav = document.getElementById('nav');
+  let ticking = false;
+  window.addEventListener('scroll', () => {
+    if (!ticking) {
+      requestAnimationFrame(() => {
+        nav.classList.toggle('scrolled', window.scrollY > 8);
+        ticking = false;
+      });
+      ticking = true;
+    }
+  });
+
+  // How it Works scroll animation
+  const hiwObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); hiwObs.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.hiw-step').forEach(el => hiwObs.observe(el));
+
+  // Services observer
+  const svcObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); svcObs.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.svc-card').forEach(el => svcObs.observe(el));
+
+  // Case Studies observers
+  const csObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); csObs.unobserve(e.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.cs-stat,.cs-card,.cs-compare').forEach(el => csObs.observe(el));
+
+  // Animated counter
+  const counterObs = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (!e.isIntersecting) return;
+      const el = e.target;
+      counterObs.unobserve(el);
+      const target = parseFloat(el.dataset.count);
+      const suffix = el.dataset.suffix || '';
+      const decimal = parseInt(el.dataset.decimal) || 0;
+      const duration = 1800;
+      const start = performance.now();
+      function tick(now) {
+        const p = Math.min((now - start) / duration, 1);
+        const ease = 1 - Math.pow(1 - p, 3);
+        const val = (target * ease).toFixed(decimal);
+        el.textContent = val + suffix;
+        if (p < 1) requestAnimationFrame(tick);
+      }
+      requestAnimationFrame(tick);
+    });
+  }, { threshold: 0.5 });
+  document.querySelectorAll('.cs-stat-num').forEach(el => counterObs.observe(el));
+
+  // Chart interaction
+  const data = [
+    {label:'Week 1', val:12, x:60, y:132},
+    {label:'Week 2', val:18, x:117, y:108},
+    {label:'Week 3', val:15, x:174, y:120},
+    {label:'Week 4', val:24, x:231, y:84},
+    {label:'Week 5', val:28, x:288, y:68},
+    {label:'Week 6', val:32, x:345, y:48},
+    {label:'Week 7', val:42, x:402, y:20},
+  ];
+
+  const container = document.getElementById('chartContainer');
+  const tooltip = document.getElementById('chartTooltip');
+  const crosshair = document.getElementById('crosshair');
+  const hoverDot = document.getElementById('hoverDot');
+  const hits = document.querySelectorAll('.chart-hit');
+
+  function showPoint(idx) {
+    const d = data[idx];
+    if (!d) return;
+    crosshair.setAttribute('x1', d.x);
+    crosshair.setAttribute('x2', d.x);
+    crosshair.classList.add('visible');
+    hoverDot.setAttribute('cx', d.x);
+    hoverDot.setAttribute('cy', d.y);
+    hoverDot.classList.add('visible');
+
+    const node = document.createTextNode('');
+    tooltip.textContent = '';
+    const strong = document.createElement('strong');
+    strong.textContent = d.val + 'K';
+    tooltip.appendChild(strong);
+    tooltip.appendChild(document.createTextNode(' · ' + d.label));
+    tooltip.classList.add('visible');
+
+    const svgRect = container.querySelector('svg').getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    const scaleX = svgRect.width / 460;
+    const scaleY = svgRect.height / 200;
+    tooltip.style.left = (svgRect.left - containerRect.left + d.x * scaleX) + 'px';
+    tooltip.style.top = (svgRect.top - containerRect.top + d.y * scaleY - 12) + 'px';
+  }
+
+  function hidePoint() {
+    crosshair.classList.remove('visible');
+    hoverDot.classList.remove('visible');
+    tooltip.classList.remove('visible');
+  }
+
+  hits.forEach(hit => {
+    hit.addEventListener('pointerenter', () => showPoint(+hit.dataset.idx));
+    hit.addEventListener('pointermove', () => showPoint(+hit.dataset.idx));
+    hit.addEventListener('pointerleave', hidePoint);
+    hit.addEventListener('focus', () => showPoint(+hit.dataset.idx));
+    hit.addEventListener('blur', hidePoint);
+    hit.setAttribute('tabindex', '0');
+    hit.setAttribute('role', 'button');
+    hit.setAttribute('aria-label', data[+hit.dataset.idx]?.label + ': ' + data[+hit.dataset.idx]?.val + 'K impressions');
+  });
+
+  // Theme toggle
+  const toggle = document.getElementById('themeToggle');
+  const sunIcon = document.getElementById('sunIcon');
+  const moonIcon = document.getElementById('moonIcon');
+  const label = document.getElementById('themeLabel');
+
+  function setTheme(dark) {
+    document.documentElement.setAttribute('data-theme', dark ? 'dark' : 'light');
+    sunIcon.style.display = dark ? 'none' : '';
+    moonIcon.style.display = dark ? '' : 'none';
+    label.textContent = dark ? 'Light mode' : 'Dark mode';
+  }
+
+  toggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    setTheme(!isDark);
+  });
+
+  // ── Booking System ──
+  const SUPABASE_URL = 'https://zchxiuoeeuqrxqzwdetf.supabase.co';
+  const SUPABASE_KEY = 'sb_publishable_sjbG0cOTs1MO7nzJ_p70ag_8yJel1kj';
+
+  const overlay = document.getElementById('bookingOverlay');
+  const nextBtn = document.getElementById('bookNext');
+  const backBtn = document.getElementById('bookBack');
+  const actionsBar = document.getElementById('bookingActions');
+  const progressDots = document.querySelectorAll('.booking-progress-dot');
+
+  let currentStep = 0;
+  let selectedDates = [];
+  let dateSlots = {};
+  let bookedData = {};
+  let calView = new Date();
+  const todayDate = new Date(); todayDate.setHours(0,0,0,0);
+  const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const DAYS = ['Su','Mo','Tu','We','Th','Fr','Sa'];
+
+  function pad(n){ return n < 10 ? '0'+n : ''+n; }
+  function fmtDate(d){ return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate()); }
+  function prettyDate(s){ const p=s.split('-'); return MONTHS[+p[1]-1]+' '+parseInt(p[2])+', '+p[0]; }
+
+  async function sbFetch(table, params){
+    const url = SUPABASE_URL+'/rest/v1/'+table+'?'+params;
+    try {
+      const r = await fetch(url, {
+        headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}
+      });
+      return await r.json();
+    } catch(e){ return []; }
+  }
+
+  async function sbInsert(table, rows){
+    const url = SUPABASE_URL+'/rest/v1/'+table;
+    try {
+      const r = await fetch(url, {
+        method:'POST',
+        headers:{
+          'apikey':SUPABASE_KEY,
+          'Authorization':'Bearer '+SUPABASE_KEY,
+          'Content-Type':'application/json',
+          'Prefer':'return=minimal'
+        },
+        body:JSON.stringify(rows)
+      });
+      if(!r.ok){const t=await r.text();console.error('Supabase insert error:',r.status,t);}
+      return r.ok;
+    } catch(e){console.error('Supabase fetch error:',e);return false;}
+  }
+
+  async function loadBookings(){
+    const today = fmtDate(todayDate);
+    const data = await sbFetch('bookings','select=booking_date,booking_type,status&booking_date=gte.'+today+'&status=neq.cancelled');
+    bookedData = {};
+    if(Array.isArray(data)){
+      data.forEach(b => {
+        if(!bookedData[b.booking_date]) bookedData[b.booking_date] = [];
+        bookedData[b.booking_date].push(b.booking_type);
+      });
+    }
+  }
+
+  function getDateStatus(dateStr){
+    const slots = bookedData[dateStr] || [];
+    if(slots.includes('full_day')) return 'full';
+    if(slots.includes('morning') && slots.includes('afternoon')) return 'full';
+    if(slots.includes('morning')) return 'morning_booked';
+    if(slots.includes('afternoon')) return 'afternoon_booked';
+    return 'free';
+  }
+
+  function renderBookingCal(){
+    const g = document.getElementById('bcalGrid');
+    const ml = document.getElementById('bcalMonth');
+    const y = calView.getFullYear(), m = calView.getMonth();
+    ml.textContent = MONTHS[m]+' '+y;
+    let html = DAYS.map(d=>'<span class="bcal-label">'+d+'</span>').join('');
+    const startDay = new Date(y,m,1).getDay();
+    const dim = new Date(y,m+1,0).getDate();
+    const prevDim = new Date(y,m,0).getDate();
+    for(let i=startDay-1;i>=0;i--) html+='<span class="bcal-day other">'+(prevDim-i)+'</span>';
+    for(let d=1;d<=dim;d++){
+      const dt=new Date(y,m,d); dt.setHours(0,0,0,0);
+      const ds=fmtDate(dt);
+      const isPast=dt<todayDate;
+      const status=getDateStatus(ds);
+      const isSel=selectedDates.includes(ds);
+      let cls='bcal-day';
+      if(isPast) cls+=' past';
+      else if(status==='full') cls+=' booked';
+      else if(status==='morning_booked'||status==='afternoon_booked') cls+=' half-booked';
+      if(isSel) cls+=' selected';
+      if(dt.getTime()===todayDate.getTime()) cls+=' today';
+      html+='<button class="'+cls+'" data-d="'+ds+'" type="button">'+d+'</button>';
+    }
+    const rem=(7-(startDay+dim)%7)%7;
+    for(let d=1;d<=rem;d++) html+='<span class="bcal-day other">'+d+'</span>';
+    g.innerHTML=html;
+    renderDateChips();
+    nextBtn.disabled=selectedDates.length===0;
+  }
+
+  function renderDateChips(){
+    const el=document.getElementById('selectedDatesList');
+    if(selectedDates.length===0){el.innerHTML='';return;}
+    el.innerHTML=selectedDates.map(d=>
+      '<span class="selected-date-chip">'+prettyDate(d)+
+      '<button type="button" data-rm="'+d+'">&times;</button></span>'
+    ).join('');
+  }
+
+  function renderTimeSlots(){
+    const el=document.getElementById('timeSlots');
+    let html='';
+    selectedDates.forEach(ds=>{
+      const status=getDateStatus(ds);
+      html+='<div class="time-slot-date">'+prettyDate(ds)+'</div>';
+      html+='<div class="time-slot-options">';
+      const fullDis=status!=='free';
+      const mornDis=status==='morning_booked'||status==='full';
+      const aftDis=status==='afternoon_booked'||status==='full';
+      const cur=dateSlots[ds]||'';
+      html+='<button class="time-slot-btn'+(cur==='full_day'?' active':'')+'" data-ds="'+ds+'" data-slot="full_day" type="button"'+(fullDis?' disabled':'')+'><div class="slot-label">Full Day</div><div class="slot-time">7:00 AM — 11:00 PM</div></button>';
+      html+='<button class="time-slot-btn'+(cur==='morning'?' active':'')+'" data-ds="'+ds+'" data-slot="morning" type="button"'+(mornDis?' disabled':'')+'><div class="slot-label">Morning</div><div class="slot-time">7:00 AM — 3:00 PM</div></button>';
+      html+='<button class="time-slot-btn'+(cur==='afternoon'?' active':'')+'" data-ds="'+ds+'" data-slot="afternoon" type="button"'+(aftDis?' disabled':'')+'><div class="slot-label">Afternoon</div><div class="slot-time">3:00 PM — 11:00 PM</div></button>';
+      html+='</div>';
+    });
+    el.innerHTML=html;
+    const allPicked=selectedDates.every(d=>dateSlots[d]);
+    nextBtn.disabled=!allPicked;
+  }
+
+  function validateContact(){
+    const name=document.getElementById('bookName').value.trim();
+    const email=document.getElementById('bookEmail').value.trim();
+    nextBtn.disabled=!(name&&email&&email.includes('@'));
+  }
+
+  function goToStep(s){
+    currentStep=s;
+    document.querySelectorAll('.booking-step').forEach(el=>{
+      el.classList.toggle('active',+el.dataset.step===s);
+    });
+    progressDots.forEach(d=>{
+      const ds=+d.dataset.step;
+      d.className='booking-progress-dot';
+      if(ds<s) d.classList.add('done');
+      if(ds===s) d.classList.add('current');
+    });
+    if(s===0){ backBtn.style.display='none'; nextBtn.textContent='Continue'; nextBtn.disabled=selectedDates.length===0; }
+    if(s===1){ backBtn.style.display=''; nextBtn.textContent='Continue'; renderTimeSlots(); }
+    if(s===2){ backBtn.style.display=''; nextBtn.textContent='Submit Booking'; validateContact(); }
+    if(s===3){ actionsBar.style.display='none'; renderConfirmation(); }
+  }
+
+  function renderConfirmation(){
+    const el=document.getElementById('bookingSummary');
+    let html='';
+    const name=document.getElementById('bookName').value.trim();
+    const email=document.getElementById('bookEmail').value.trim();
+    html+='<div class="booking-summary-row"><span>Name</span><span>'+name+'</span></div>';
+    html+='<div class="booking-summary-row"><span>Email</span><span>'+email+'</span></div>';
+    selectedDates.forEach(ds=>{
+      const slot=dateSlots[ds];
+      const labels={full_day:'Full Day (7AM–11PM)',morning:'Morning (7AM–3PM)',afternoon:'Afternoon (3PM–11PM)'};
+      html+='<div class="booking-summary-row"><span>'+prettyDate(ds)+'</span><span>'+labels[slot]+'</span></div>';
+    });
+    el.innerHTML=html;
+  }
+
+  async function submitBooking(){
+    const name=document.getElementById('bookName').value.trim();
+    const email=document.getElementById('bookEmail').value.trim();
+    const phone=document.getElementById('bookPhone').value.trim();
+    if(!name||!email){nextBtn.textContent='Submit Booking';nextBtn.disabled=false;return;}
+    const times={full_day:['07:00','23:00'],morning:['07:00','15:00'],afternoon:['15:00','23:00']};
+    const rows=[];
+    for(const ds of selectedDates){
+      const slot=dateSlots[ds];
+      if(!slot||!times[slot]) continue;
+      rows.push({
+        booking_date:ds,
+        booking_type:slot,
+        start_time:times[slot][0],
+        end_time:times[slot][1],
+        client_name:name,
+        client_email:email,
+        client_phone:phone||null,
+        status:'pending'
+      });
+    }
+    if(rows.length===0){nextBtn.textContent='Submit Booking';nextBtn.disabled=false;return;}
+    nextBtn.textContent='Submitting...';
+    nextBtn.disabled=true;
+    const ok=await sbInsert('bookings',rows);
+    if(ok){ goToStep(3); }
+    else {
+      nextBtn.textContent='Submit Booking';
+      nextBtn.disabled=false;
+      alert('Something went wrong. Please try again.');
+    }
+  }
+
+  function resetBooking(){
+    currentStep=0;
+    selectedDates=[];
+    dateSlots={};
+    document.getElementById('bookName').value='';
+    document.getElementById('bookEmail').value='';
+    document.getElementById('bookPhone').value='';
+    actionsBar.style.display='';
+    goToStep(0);
+  }
+
+  // Open/close modal
+  document.getElementById('openBooking').addEventListener('click',async ()=>{
+    resetBooking();
+    overlay.classList.add('open');
+    document.body.style.overflow='hidden';
+    await loadBookings();
+    renderBookingCal();
+  });
+
+  document.getElementById('bookingClose').addEventListener('click',()=>{
+    overlay.classList.remove('open');
+    document.body.style.overflow='';
+  });
+
+  overlay.addEventListener('click',(e)=>{
+    if(e.target===overlay){ overlay.classList.remove('open'); document.body.style.overflow=''; }
+  });
+
+  // Calendar nav
+  document.getElementById('bcalPrev').addEventListener('click',()=>{
+    calView.setMonth(calView.getMonth()-1);
+    renderBookingCal();
+  });
+  document.getElementById('bcalNext').addEventListener('click',()=>{
+    calView.setMonth(calView.getMonth()+1);
+    renderBookingCal();
+  });
+
+  // Date selection (toggle)
+  document.getElementById('bcalGrid').addEventListener('click',(e)=>{
+    const btn=e.target.closest('.bcal-day');
+    if(!btn||btn.classList.contains('past')||btn.classList.contains('booked')||btn.classList.contains('other')) return;
+    const ds=btn.dataset.d;
+    if(!ds) return;
+    const idx=selectedDates.indexOf(ds);
+    if(idx>-1){ selectedDates.splice(idx,1); delete dateSlots[ds]; }
+    else selectedDates.push(ds);
+    selectedDates.sort();
+    renderBookingCal();
+  });
+
+  // Remove date chip
+  document.getElementById('selectedDatesList').addEventListener('click',(e)=>{
+    const btn=e.target.closest('[data-rm]');
+    if(!btn) return;
+    const ds=btn.dataset.rm;
+    selectedDates=selectedDates.filter(d=>d!==ds);
+    delete dateSlots[ds];
+    renderBookingCal();
+  });
+
+  // Time slot selection
+  document.getElementById('timeSlots').addEventListener('click',(e)=>{
+    const btn=e.target.closest('.time-slot-btn');
+    if(!btn||btn.disabled) return;
+    dateSlots[btn.dataset.ds]=btn.dataset.slot;
+    renderTimeSlots();
+  });
+
+  // Contact validation
+  ['bookName','bookEmail'].forEach(id=>{
+    document.getElementById(id).addEventListener('input',validateContact);
+  });
+
+  // Next/Back
+  nextBtn.addEventListener('click',async ()=>{
+    if(currentStep===2){ await submitBooking(); return; }
+    if(currentStep<3) goToStep(currentStep+1);
+  });
+  backBtn.addEventListener('click',()=>{
+    if(currentStep>0) goToStep(currentStep-1);
+  });
+})();
+</script>
